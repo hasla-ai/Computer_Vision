@@ -1,0 +1,26 @@
+import numpy as np
+
+# 1. 입력 데이터 (N=100개 이미지, D=3072개 픽셀)
+N, D = 100, 3072
+H = 100   # 은닉층(Hidden Layer)의 노드 수 (특징 조각 100개 추출)
+C = 10    # 최종 클래스 개수 (CIFAR-10)
+
+X = np.random.randn(N, D)
+
+# 2. 가중치 초기화
+W1 = np.random.randn(D, H) * 0.01  # (3072, 100)
+W2 = np.random.randn(H, C) * 0.01  # (100, 10)
+
+# =========================================================
+# 2층 신경망의 Forward Pass (단 3줄!)
+# =========================================================
+# Layer 1: 첫 번째 선형 변환 -> (N, H)
+h_linear = X.dot(W1) 
+
+# Activation: ReLU를 통과시켜 선을 꺾음 (음수는 0으로) -> (N, H)
+h_relu = np.maximum(0, h_linear) 
+
+# Layer 2: 두 번째 선형 변환으로 최종 점수 계산 -> (N, C)
+scores = h_relu.dot(W2) 
+
+print("최종 점수 행렬 형태 (N, C):", scores.shape)  # (100, 10)

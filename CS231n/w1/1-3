@@ -1,0 +1,75 @@
+import numpy as np
+
+
+def softmax_loss_vectorized(W, X, y, reg):
+    """
+    Softmax (Cross-Entropy) Loss 및 Analytical Gradient (dW) 구현
+    
+    Inputs:
+    - W: (D, C) 가중치 행렬
+    - X: (N, D) 입력 데이터 (N개 샘플)
+    - y: (N,) 정답 레이블 (0 <= y[i] < C)
+    - reg: L2 Regularization 강도
+    
+    Returns:
+    - loss: 단일 스칼라 (Data Loss + Reg Loss)
+    - dW: W에 대한 손실 함수 기울기 (D, C)
+    """
+    num_train = X.shape[0]
+
+    # -------------------------------------------------------------
+    # 1. Forward Pass: Scores -> Probabilities -> Loss
+    # -------------------------------------------------------------
+    # Scores 연산: (N, C)
+    scores = X.dot(W)
+
+    # Numeric Stability: Overflow 방지를 위해 각 행의 최대값을 차감
+    scores -= np.max(scores, axis=1, keepdims=True)
+
+    # Softmax 확률 계산: (N, C)
+    exp_scores = np.exp(scores)
+    probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+
+    # Data Loss 계산: -log(P_yi)
+    correct_logprobs = -np.log(probs[np.arange(num_train), y])
+    data_loss = np.sum(correct_logprobs) / num_train
+
+    # L2 Regularization Loss
+    reg_loss = 0.5 * reg * np.sum(W * W)
+    loss = data_loss + reg_loss
+
+    # -------------------------------------------------------------
+    # 2. Backward Pass: Gradient (dW) 연산
+    # -------------------------------------------------------------
+    # dL/dS = P - 1(j == y_i)
+    dscores = probs.copy()
+    dscores[np.arange(num_train), y] -= 1.0  # 정답 클래스 위치만 -1
+
+    # dW = X.T dot dscores -> (D, N) dot (N, C) = (D, C)
+    dW = X.T.dot(dscores)
+
+    # N으로 나누고 L2 Reg 미분항 추가
+    dW /= num_train
+    dW += reg * W
+
+    return loss, dW
+
+
+# =====================================================================
+# 🧪 Softmax Loss 작동 테스트
+# =====================================================================
+if __name__ == "__main__":
+    np.random.seed(42)
+
+    # 5개 샘플, 10개 피처, 3개 클래스 가상 데이터
+    N, D, C = 5, 10, 3
+    X = np.random.randn(N, D)
+    W = np.random.randn(D, C) * 0.001
+    y = np.random.randint(0, C, size=N)
+    reg = 0.1
+
+    loss, dW = softmax_loss_vectorized(W, X, y, reg)
+
+    print("=== Softmax Loss & Gradient 결과 ===")
+    print(f"Calculated Loss: {loss:.4f}")
+    print(f"dW Matrix Shape: {dW.shape}")
